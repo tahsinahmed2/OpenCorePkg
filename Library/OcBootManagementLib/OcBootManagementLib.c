@@ -12,6 +12,10 @@
   WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 **/
 
+#if defined(OC_TARGET_DEBUG) || defined(OC_TARGET_NOOPT)
+//#define DISPLAY_SYSTEM_MS
+#endif
+
 #include "BootManagementInternal.h"
 
 #include <Guid/AppleFile.h>
@@ -40,6 +44,7 @@
 #include <Library/OcBootManagementLib.h>
 #include <Library/OcDevicePathLib.h>
 #include <Library/OcFileLib.h>
+#include <Library/OcKbDebugDisplayLib.h>
 #include <Library/OcMiscLib.h>
 #include <Library/OcRtcLib.h>
 #include <Library/OcStringLib.h>
@@ -105,21 +110,34 @@ RunShowMenu (
   return Status;
 }
 
+#if defined (DISPLAY_SYSTEM_MS)
+STATIC
+VOID
+DisplaySystemMs ()
+{
+  UINT64      CurrentMillis;
+
+  CurrentMillis = GetTimeInNanoSecond (GetPerformanceCounter ()) / 1000000ULL;
+  Print(L"%,Lu]", CurrentMillis);
+}
+#endif
+
 STATIC
 CHAR16
 GetPickerEntryCursor (
   IN  OC_BOOT_CONTEXT             *BootContext,
   IN  UINT32                      TimeOutSeconds,
   IN  INTN                        ChosenEntry,
-  IN  UINTN                       Index
+  IN  UINTN                       Index,
+  IN  BOOLEAN                     SetDefault
   )
-{  
+{
   if (TimeOutSeconds > 0 && BootContext->DefaultEntry->EntryIndex - 1 == Index) {
     return L'*';
   }
   
   if (ChosenEntry >= 0 && (UINTN) ChosenEntry == Index) {
-    return L'>';
+    return SetDefault ? L'+' : L'>';
   }
 
   return L' ';
@@ -140,6 +158,9 @@ OcShowSimpleBootMenu (
   INTN                               ChosenEntry;
   INTN                               OldChosenEntry;
   INT32                              FirstIndexRow;
+#if defined (DISPLAY_SYSTEM_MS)
+  INT32                              MillisColumn;
+#endif
   INT32                              StatusRow;
   INT32                              StatusColumn;
   CHAR16                             EntryCursor;
@@ -147,6 +168,7 @@ OcShowSimpleBootMenu (
   CHAR16                             Code[2];
   UINT32                             TimeOutSeconds;
   UINT32                             Count;
+  UINT64                             KeyEndTime;
   BOOLEAN                            SetDefault;
   BOOLEAN                            PlayedOnce;
   BOOLEAN                            PlayChosen;
@@ -161,8 +183,17 @@ OcShowSimpleBootMenu (
   OldEntryCursor = L'\0';
   FirstIndexRow  = -1;
 
+  KeyIndex       = 0;
+  SetDefault     = FALSE;
+
   PlayedOnce     = FALSE;
   PlayChosen     = FALSE;
+
+  DEBUG_CODE_BEGIN();
+  if ((BootContext->PickerContext->PickerAttributes & OC_ATTR_ENABLE_KB_DEBUG) != 0) {
+    OcInitKbDebugDisplay(GetTscFrequency());
+  }
+  DEBUG_CODE_END();
 
   KeyMap = OcAppleKeyMapInstallProtocols (FALSE);
   if (KeyMap == NULL) {
@@ -200,7 +231,7 @@ OcShowSimpleBootMenu (
       }
       
       if (ChosenEntry >= 0) {
-        EntryCursor = GetPickerEntryCursor(BootContext, TimeOutSeconds, ChosenEntry, ChosenEntry);
+        EntryCursor = GetPickerEntryCursor(BootContext, TimeOutSeconds, ChosenEntry, ChosenEntry, SetDefault);
       } else {
         EntryCursor = L'\0';
       }
@@ -217,6 +248,12 @@ OcShowSimpleBootMenu (
 
         gST->ConOut->SetCursorPosition (gST->ConOut, StatusColumn, StatusRow);
       }
+
+#if defined (DISPLAY_SYSTEM_MS)
+      gST->ConOut->SetCursorPosition (gST->ConOut, MillisColumn, 0);
+      DisplaySystemMs();
+      gST->ConOut->SetCursorPosition (gST->ConOut, StatusColumn, StatusRow);
+#endif
     } else {
       //
       // Render initial menu
@@ -234,12 +271,18 @@ OcShowSimpleBootMenu (
         gST->ConOut->OutputString (gST->ConOut, L")");
       }
 
+#if defined (DISPLAY_SYSTEM_MS)
+      gST->ConOut->OutputString (gST->ConOut, L" [System uptime: ");
+      MillisColumn = gST->ConOut->Mode->CursorColumn;
+      DisplaySystemMs();
+#endif
+
       gST->ConOut->OutputString (gST->ConOut, L"\r\n\r\n");
 
       FirstIndexRow = gST->ConOut->Mode->CursorRow;
 
       for (Index = 0; Index < MIN (Count, OC_INPUT_MAX); ++Index) {
-        EntryCursor = GetPickerEntryCursor(BootContext, TimeOutSeconds, ChosenEntry, Index);
+        EntryCursor = GetPickerEntryCursor(BootContext, TimeOutSeconds, ChosenEntry, Index, SetDefault);
 
         if (ChosenEntry >= 0 && (UINTN) ChosenEntry == Index) {
           OldEntryCursor = EntryCursor;
@@ -287,12 +330,20 @@ OcShowSimpleBootMenu (
       //
       // Pronounce entry name only after N ms of idleness.
       //
+      if (KeyIndex != OC_INPUT_MODIFIERS_ONLY) {
+        KeyEndTime = OcWaitForAppleKeyIndexGetEndTime(PlayChosen ? OC_VOICE_OVER_IDLE_TIMEOUT_MS : TimeOutSeconds * 1000);
+      }
+
       KeyIndex = OcWaitForAppleKeyIndex (
         BootContext->PickerContext,
         KeyMap,
-        PlayChosen ? OC_VOICE_OVER_IDLE_TIMEOUT_MS : TimeOutSeconds * 1000,
+        KeyEndTime,
         &SetDefault
         );
+
+      if (KeyIndex == OC_INPUT_MODIFIERS_ONLY) {
+        break;
+      }
 
       if (PlayChosen && KeyIndex == OC_INPUT_TIMEOUT) {
         OcPlayAudioFile (BootContext->PickerContext, OcVoiceOverAudioFileSelected, FALSE);
@@ -755,7 +806,7 @@ OcRunBootPicker (
       // Ensure that we flush all pressed keys after the application.
       // This resolves the problem of application-pressed keys being used to control the menu.
       //
-      OcKeyMapFlush (KeyMap, 0, TRUE);
+      OcKeyMapFlush (KeyMap, 0, TRUE, FALSE, FALSE);
     }
 
     OcFreeBootContext (BootContext);

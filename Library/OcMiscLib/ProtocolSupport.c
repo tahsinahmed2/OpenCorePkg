@@ -166,3 +166,27 @@ OcCountProtocolInstances (
 
   return HandleCount;
 }
+
+VOID *
+OcGetProtocol (
+  IN  EFI_GUID      *Protocol,
+  IN  UINTN         ErrorLevel,
+  IN  CONST CHAR8   *Format
+  )
+{
+  EFI_STATUS        Status;
+  VOID              *Instance;
+
+  Status = gBS->LocateProtocol (
+    Protocol,
+    NULL,
+    (VOID **) &Instance
+    );
+
+  if (EFI_ERROR (Status)) {
+    DEBUG ((ErrorLevel, Format, Status));
+    return NULL;
+  }
+
+  return Instance;
+}

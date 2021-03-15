@@ -1317,6 +1317,8 @@
 		</array>
 		<key>Input</key>
 		<dict>
+			<key>DownkeysHandler</key>
+			<string>Enabled</string>
 			<key>KeyFiltering</key>
 			<false/>
 			<key>KeyForgetThreshold</key>

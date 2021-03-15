@@ -89,6 +89,7 @@
   OcHeciLib|OpenCorePkg/Library/OcHeciLib/OcHeciLib.inf
   OcHiiDatabaseLocalLib|OpenCorePkg/Library/OcHiiDatabaseLib/OcHiiDatabaseLocalLib.inf
   OcInputLib|OpenCorePkg/Library/OcInputLib/OcInputLib.inf
+  OcKbDebugDisplayLib|OpenCorePkg/Library/OcKbDebugDisplayLib/OcKbDebugDisplayLib.inf
   OcMachoLib|OpenCorePkg/Library/OcMachoLib/OcMachoLib.inf
   OcMacInfoLib|OpenCorePkg/Library/OcMacInfoLib/OcMacInfoLib.inf
   OcMainLib|OpenCorePkg/Library/OcMainLib/OcMainLib.inf
@@ -105,6 +106,7 @@
   OcStorageLib|OpenCorePkg/Library/OcStorageLib/OcStorageLib.inf
   OcStringLib|OpenCorePkg/Library/OcStringLib/OcStringLib.inf
   OcTemplateLib|OpenCorePkg/Library/OcTemplateLib/OcTemplateLib.inf
+  OcTypingLib|OpenCorePkg/Library/OcTypingLib/OcTypingLib.inf
   TimerLib|OpenCorePkg/Library/OcTimerLib/OcTimerLib.inf
   OcUnicodeCollationEngGenericLib|OpenCorePkg/Library/OcUnicodeCollationEngLib/OcUnicodeCollationEngGenericLib.inf
   OcUnicodeCollationEngLocalLib|OpenCorePkg/Library/OcUnicodeCollationEngLib/OcUnicodeCollationEngLocalLib.inf

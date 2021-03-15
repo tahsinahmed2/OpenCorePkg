@@ -108,6 +108,23 @@ OcCountProtocolInstances (
   );
 
 /**
+  Obtain protocol.
+
+  @param[in]  Protocol      Protocol to search for.
+  @param[in]  ErrorLevel    The error level of the debug message to print if not found.
+  @param[in]  Format        The format string for the debug message to print if not found,
+                            should contain %r for status display.
+
+  @return     Protocol instance, or NULL if not found.
+**/
+VOID *
+OcGetProtocol (
+  IN  EFI_GUID      *Protocol,
+  IN  UINTN         ErrorLevel,
+  IN  CONST CHAR8   *Format
+  );
+
+/**
   Run and execute image file from buffer.
 
   @param[in]  DevicePath   Image device path, optional.

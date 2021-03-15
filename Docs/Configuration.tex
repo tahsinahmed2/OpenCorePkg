@@ -3199,6 +3199,9 @@ the default boot entry choice will remain changed until the next manual reconfig
   \item \texttt{0x0010} --- \texttt{OC\_ATTR\_USE\_POINTER\_CONTROL}, enables pointer control
   in the OpenCore picker when available. For example, this could make use of mouse or trackpad to
   control UI elements.
+  \item \texttt{0x0020} --- \texttt{OC\_ATTR\_ENABLE\_KB\_DEBUG}, enable display of additional
+  keyboard timing and debug information, in Builtin picker in \texttt{DEBUG} and \texttt{NOOPT}
+  builds only.
   \end{itemize}
 
 \item
@@ -6239,6 +6242,23 @@ functioning. Feature highlights:
 \subsection{Input Properties}\label{uefiinputprops}
 
 \begin{enumerate}
+
+  \item
+  \texttt{DownkeysHandler}\\
+  \textbf{Type}: \texttt{plist\ string}\\
+  \textbf{Failsafe}: \texttt{Disabled}\\
+  \textbf{Description}: Enable additional keyboard handling, with support for non-repeating keys
+  and typeahead keys. Affects both \texttt{Builtin} bootpicker and OpenCanopy. On almost all systems
+  this should be set to \texttt{Enabled}.
+
+  \begin{itemize}
+  \tightlist
+  \item \texttt{Enabled} --- Use additional key handling.
+  \item \texttt{Disabled} --- Use legacy key handling only.
+  \end{itemize}
+
+  \emph{Note}: even when set to \texttt{Enabled}, legacy handler will still be used as fallback, with
+  warnings in debug log, if required protocols such as Apple Events are not correctly installed.
 
 \item
   \texttt{KeyFiltering}\\
