@@ -15,8 +15,12 @@ OpenCore Changelog
 - Fixed OpenCanopy sometimes cutting off shown boot entries
 - Further improved CPU frequency calculation on legacy CPUs
 - Fixed SMBIOS SMC version encoding sequence
-- Implemented TSC frequency reading from Apple Platform Info
+- Added TSC frequency reading from Apple Platform Info
+- Added TSC frequency reading for Apple devices with nForce chipsets
+- Added `Base` and `BaseSkip` lookup for ACPI patches
+- Fixed ACPI table magic corruption during patching
 - Added `Strategy` field in kext blocking for disabling/exclusion
+
 
 #### v0.6.7
 - Fixed ocvalidate return code to be non-zero when issues are found
